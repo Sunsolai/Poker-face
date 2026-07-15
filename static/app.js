@@ -28,6 +28,7 @@ const state = {
   selectedId: "",
   generating: false,
   relayConfigured: false,
+  readyForGeneration: false,
 };
 
 const nodes = {
@@ -165,10 +166,10 @@ function updateComparePanel() {
 }
 
 function updateActions() {
-  const generated = state.results.filter((item) => item.effectId !== "original" && !item.pending).length;
+  const generated = state.results.filter((item) => item.effectId !== "original" && !item.pending && !item.error).length;
   nodes.progressText.textContent = `${generated} of ${EFFECTS.length}`;
-  nodes.generateAll.disabled = !state.sourceImage || state.generating || !state.relayConfigured;
-  nodes.generateAll.textContent = state.relayConfigured ? "Generate set" : "Configure relay";
+  nodes.generateAll.disabled = !state.sourceImage || state.generating || !state.readyForGeneration;
+  nodes.generateAll.textContent = state.readyForGeneration ? "Generate set" : "Image model needed";
   nodes.regenerateSelected.disabled = !state.sourceImage || state.generating || selectedResult()?.effectId === "original";
   nodes.deleteSelected.disabled = !selectedResult() || selectedResult()?.effectId === "original";
 }
@@ -185,9 +186,14 @@ async function loadConfig() {
     const response = await fetch("/api/config");
     const config = await response.json();
     state.relayConfigured = config.relayConfigured;
+    state.readyForGeneration = config.readyForGeneration;
     nodes.modelName.textContent = config.model;
-    nodes.relayState.textContent = config.relayConfigured ? "Ready" : "Missing URL";
-    nodes.relayState.style.color = config.relayConfigured ? "var(--ok)" : "var(--warn)";
+    nodes.relayState.textContent = config.readyForGeneration
+      ? "Ready"
+      : config.relayConfigured
+        ? "Needs image model"
+        : "Missing URL";
+    nodes.relayState.style.color = config.readyForGeneration ? "var(--ok)" : "var(--warn)";
     render();
   } catch {
     nodes.modelName.textContent = "Unavailable";
@@ -226,6 +232,9 @@ async function generateEffect(effectId, label) {
 async function generateAll() {
   if (!state.sourceImage || state.generating) return;
   state.generating = true;
+  state.results = state.results.filter((item) => item.effectId === "original");
+  state.selectedId = "original";
+  saveState();
   updateActions();
 
   for (const [effectId, label] of EFFECTS) {
@@ -241,6 +250,10 @@ async function generateAll() {
       });
       saveState();
       render();
+      if (/Relay API error (400|401|403|429|500|502|503|504)|model_not_found|no available channel|not configured|not an image generation model|connection failed/i.test(error.message)) {
+        alert(`Generation stopped: ${error.message}`);
+        break;
+      }
     }
   }
 

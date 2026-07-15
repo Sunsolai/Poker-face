@@ -41,6 +41,7 @@ RELAY_API_KEY = os.environ.get("POKER_FACE_RELAY_API_KEY", "").strip()
 RELAY_FORMAT = os.environ.get("POKER_FACE_RELAY_FORMAT", "gemini").strip().lower()
 RELAY_AUTH = os.environ.get("POKER_FACE_RELAY_AUTH", "bearer").strip().lower()
 REQUEST_TIMEOUT = int(os.environ.get("POKER_FACE_REQUEST_TIMEOUT", "120"))
+IMAGE_MODEL_HINTS = ("image", "imagen")
 
 
 EFFECT_PROMPTS = {
@@ -101,8 +102,21 @@ def relay_endpoint() -> str:
     return RELAY_URL
 
 
+def openai_image_edit_endpoint() -> str:
+    url = RELAY_URL.rstrip("/")
+    if url.endswith("/images/edits"):
+        return url
+    if url.endswith("/v1"):
+        return f"{url}/images/edits"
+    return f"{url}/v1/images/edits"
+
+
 def request_headers() -> dict[str, str]:
-    headers = {"Content-Type": "application/json"}
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "User-Agent": "PokerFace/1.0 (+https://localhost)",
+    }
     if RELAY_API_KEY and RELAY_AUTH == "bearer":
         headers["Authorization"] = f"Bearer {RELAY_API_KEY}"
     return headers
@@ -140,6 +154,29 @@ def openai_payload(prompt: str, data_url: str) -> dict[str, Any]:
     }
 
 
+def multipart_body(fields: dict[str, str], files: list[dict[str, Any]]) -> tuple[bytes, str]:
+    boundary = f"----PokerFaceBoundary{int(time.time() * 1000)}"
+    chunks: list[bytes] = []
+    for name, value in fields.items():
+        chunks.append(f"--{boundary}\r\n".encode("utf-8"))
+        chunks.append(f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode("utf-8"))
+        chunks.append(str(value).encode("utf-8"))
+        chunks.append(b"\r\n")
+    for file_info in files:
+        chunks.append(f"--{boundary}\r\n".encode("utf-8"))
+        chunks.append(
+            (
+                f'Content-Disposition: form-data; name="{file_info["field"]}"; '
+                f'filename="{file_info["filename"]}"\r\n'
+            ).encode("utf-8")
+        )
+        chunks.append(f'Content-Type: {file_info["mime"]}\r\n\r\n'.encode("utf-8"))
+        chunks.append(file_info["content"])
+        chunks.append(b"\r\n")
+    chunks.append(f"--{boundary}--\r\n".encode("utf-8"))
+    return b"".join(chunks), boundary
+
+
 def extract_image(response: dict[str, Any]) -> str:
     candidates = response.get("candidates", [])
     for candidate in candidates:
@@ -168,27 +205,92 @@ def extract_image(response: dict[str, Any]) -> str:
     raise RuntimeError("Relay API response did not include an image.")
 
 
+def compact_relay_error(status: int, detail: str) -> str:
+    try:
+        parsed = json.loads(detail)
+        error = parsed.get("error", parsed)
+        if isinstance(error, dict):
+            code = error.get("code")
+            message = error.get("message") or error.get("type") or detail
+            if code:
+                return f"Relay API error {status}: {code} - {message}"
+            return f"Relay API error {status}: {message}"
+    except json.JSONDecodeError:
+        pass
+    return f"Relay API error {status}: {detail[:500]}"
+
+
+def request_openai_image_edit(data_url: str, prompt: str) -> dict[str, Any]:
+    mime, image_b64 = parse_data_url(data_url)
+    image_bytes = base64.b64decode(image_b64)
+    extension = mimetypes.guess_extension(mime) or ".png"
+    body, boundary = multipart_body(
+        fields={
+            "model": MODEL,
+            "prompt": prompt,
+            "n": "1",
+            "size": "1024x1024",
+            "quality": "low",
+        },
+        files=[
+            {
+                "field": "image[]",
+                "filename": f"portrait{extension}",
+                "mime": mime,
+                "content": image_bytes,
+            }
+        ],
+    )
+    headers = request_headers()
+    headers["Content-Type"] = f"multipart/form-data; boundary={boundary}"
+    request = urllib.request.Request(
+        add_query_key(openai_image_edit_endpoint()),
+        data=body,
+        headers=headers,
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response:
+            raw = response.read().decode("utf-8")
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(compact_relay_error(exc.code, detail)) from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"Relay API connection failed: {exc.reason}") from exc
+
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(f"Relay API returned non-JSON response: {raw[:300]}") from exc
+
+
 def generate_image(data_url: str, effect_id: str, effect_label: str, intensity: str) -> dict[str, Any]:
     if not RELAY_URL:
         raise RuntimeError("POKER_FACE_RELAY_URL is not configured.")
 
     mime, image_b64 = parse_data_url(data_url)
     prompt = build_prompt(effect_label, EFFECT_PROMPTS.get(effect_id, effect_label), intensity)
-    payload = gemini_payload(prompt, mime, image_b64) if RELAY_FORMAT == "gemini" else openai_payload(prompt, data_url)
-    url = add_query_key(relay_endpoint())
-    body = json.dumps(payload).encode("utf-8")
-    request = urllib.request.Request(url, data=body, headers=request_headers(), method="POST")
+    if RELAY_FORMAT == "openai":
+        parsed = request_openai_image_edit(data_url, prompt)
+    else:
+        payload = gemini_payload(prompt, mime, image_b64)
+        url = add_query_key(relay_endpoint())
+        body = json.dumps(payload).encode("utf-8")
+        request = urllib.request.Request(url, data=body, headers=request_headers(), method="POST")
 
-    try:
-        with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response:
-            raw = response.read().decode("utf-8")
-    except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"Relay API error {exc.code}: {detail[:500]}") from exc
-    except urllib.error.URLError as exc:
-        raise RuntimeError(f"Relay API connection failed: {exc.reason}") from exc
+        try:
+            with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response:
+                raw = response.read().decode("utf-8")
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            raise RuntimeError(compact_relay_error(exc.code, detail)) from exc
+        except urllib.error.URLError as exc:
+            raise RuntimeError(f"Relay API connection failed: {exc.reason}") from exc
 
-    parsed = json.loads(raw)
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(f"Relay API returned non-JSON response: {raw[:300]}") from exc
     return {
         "id": f"{effect_id}-{int(time.time() * 1000)}",
         "effectId": effect_id,
@@ -215,11 +317,14 @@ class PokerFaceHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         if self.path == "/api/config":
+            image_model_configured = any(hint in MODEL.lower() for hint in IMAGE_MODEL_HINTS)
             self.send_json(
                 200,
                 {
                     "model": MODEL,
                     "relayConfigured": bool(RELAY_URL),
+                    "imageModelConfigured": image_model_configured,
+                    "readyForGeneration": bool(RELAY_URL) and image_model_configured,
                     "relayFormat": RELAY_FORMAT,
                     "storage": "localStorage",
                 },
@@ -248,6 +353,11 @@ class PokerFaceHandler(BaseHTTPRequestHandler):
         try:
             length = int(self.headers.get("Content-Length", "0"))
             payload = json.loads(self.rfile.read(length).decode("utf-8"))
+            if not any(hint in MODEL.lower() for hint in IMAGE_MODEL_HINTS):
+                raise RuntimeError(
+                    f"Configured model '{MODEL}' is not an image generation model. "
+                    "Use an image-capable model enabled by the relay."
+                )
             result = generate_image(
                 data_url=payload["image"],
                 effect_id=payload["effectId"],
