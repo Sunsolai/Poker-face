@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Poker Face</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">PF</div>
+          <div>
+            <h1>Poker Face</h1>
+            <p>Realistic aesthetic previews from one selfie.</p>
+          </div>
+        </div>
+
+        <section class="panel upload-panel">
+          <label class="upload-box" for="photoInput">
+            <input id="photoInput" type="file" accept="image/*" />
+            <span class="upload-title">Upload portrait</span>
+            <span class="upload-copy">Front-facing photos work best.</span>
+          </label>
+
+          <div class="source-preview empty" id="sourcePreview">
+            <span>No photo selected</span>
+          </div>
+
+          <div class="field">
+            <label for="intensity">Prompt intensity</label>
+            <select id="intensity">
+              <option value="subtle">Subtle</option>
+              <option value="balanced" selected>Balanced</option>
+              <option value="defined">Defined</option>
+            </select>
+          </div>
+
+          <div class="actions">
+            <button class="primary" id="generateAll" type="button">Generate set</button>
+            <button id="clearAll" type="button">Clear local data</button>
+          </div>
+        </section>
+
+        <section class="panel status-panel">
+          <div class="status-row">
+            <span>Model</span>
+            <strong id="modelName">Loading</strong>
+          </div>
+          <div class="status-row">
+            <span>Relay</span>
+            <strong id="relayState">Checking</strong>
+          </div>
+          <div class="status-row">
+            <span>Progress</span>
+            <strong id="progressText">0 of 20</strong>
+          </div>
+        </section>
+
+        <p class="disclaimer">
+          Simulated previews only. Results are not medical advice and may not match real cosmetic outcomes.
+        </p>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Desktop-first MVP</p>
+            <h2>Preview gallery</h2>
+          </div>
+          <div class="topbar-actions">
+            <button id="compareToggle" type="button">Compare</button>
+            <button id="regenerateSelected" type="button">Regenerate</button>
+            <button id="deleteSelected" type="button">Delete</button>
+          </div>
+        </header>
+
+        <section class="compare-panel hidden" id="comparePanel">
+          <div>
+            <span>Original</span>
+            <img id="compareOriginal" alt="Original uploaded portrait" />
+          </div>
+          <div>
+            <span>Selected preview</span>
+            <img id="compareGenerated" alt="Selected generated preview" />
+          </div>
+        </section>
+
+        <section class="gallery-wrap">
+          <div class="empty-state" id="emptyState">
+            <h3>Upload a selfie to start</h3>
+            <p>The generated results will fill this Pinterest-style gallery as each preview completes.</p>
+          </div>
+          <div class="masonry" id="gallery"></div>
+        </section>
+      </main>
+    </div>
+
+    <template id="cardTemplate">
+      <article class="preview-card">
+        <div class="image-frame">
+          <img alt="" />
+          <div class="loading-fill"></div>
+        </div>
+        <div class="card-meta">
+          <span class="card-label"></span>
+          <button class="card-save" type="button">Save</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
