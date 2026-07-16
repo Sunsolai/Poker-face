@@ -1,93 +1,153 @@
 # AGENTS.md
 
 ## Project Overview
-- **Project:** Poker Face — an app that lets users upload a selfie and preview possible facial aesthetic changes before taking real-world action.
+
+- **Project:** Poker Face — a desktop-first web MVP that lets users upload a portrait photo and generate realistic facial aesthetic preview images.
 - **Target user:** women aged 18-55 who want to explore appearance changes safely and privately.
-- **My skill level:** intermediate
-- **Stack:** see package files
+- **Primary language:** Python, with a standard-library backend and static frontend.
+- **Current files:** `app.py`, `static/index.html`, `static/app.js`, `static/styles.css`, `.env.example`, `README.md`, `AGENTS.md`.
+
+## Current Implementation
+
+- `app.py` serves static files, exposes JSON APIs, calls the image relay, and runs the dev watcher.
+- `static/app.js` handles upload, filter selection, generation flow, lightweight state persistence, and frontend reload polling.
+- `static/styles.css` implements the desktop-first sidebar, filter chips, status panel, and masonry gallery.
+- `static/index.html` contains the app shell, upload controls, preview filters, status rows, compare panel, and gallery template.
+- No package install is required for the current MVP.
 
 ## MVP/V1 Decisions
+
 - **Generation:** MVP must use real AI image generation, not static mock results.
-- **Model:** use `gpt-image-2` through an OpenAI-compatible relay API.
-- **Gemini:** keep Gemini image generation logic only as commented reference code.
-- **Platform:** web app, desktop-first.
-- **Gallery:** Pinterest-style masonry gallery experience.
-- **Mobile:** defer mobile migration until later unless explicitly requested.
-- **Accounts:** no user accounts in V1.
-- **Storage:** use browser Local Storage in V1.
-- **Realism:** control prompt intensity so results remain realistic and not overly aggressive.
-- **Primary language:** Python, while staying flexible based on existing project files.
+- **Active model:** use `gpt-image-2` through an OpenAI-compatible relay API.
+- **Relay format:** active path is `POKER_FACE_RELAY_FORMAT=openai`.
+- **Gemini:** keep Gemini image generation logic only as commented reference code in `app.py`.
+- **Platform:** desktop-first web app.
+- **Gallery:** Pinterest-style masonry gallery.
+- **Mobile:** defer mobile migration unless explicitly requested.
+- **Accounts:** no accounts or authentication in V1.
+- **Storage:** use browser `localStorage` only for lightweight UI state.
+- **Images:** do not store uploaded or generated base64 images in `localStorage`.
+- **Realism:** keep prompt intensity conservative and identity-preserving.
 
 ## Commands
-- **Install:** no package install required for the current MVP
+
+- **Install:** no package install required.
 - **Dev:** `python app.py`
-- **Build:** not required for the current standard-library MVP
+- **Open:** `http://127.0.0.1:8000`
 - **Test:** `python -m py_compile app.py`
-- **Lint:** no linter configured yet
+- **JS syntax check:** `node --check static\app.js`
+- **Build:** not required.
+- **Lint:** no linter configured.
+
+`python app.py` starts a no-dependency dev watcher. It restarts the child app process when `app.py`, `.env`, `.env.example`, `README.md`, `AGENTS.md`, or files under `static/` change. The frontend polls `/api/dev-version` and reloads after backend restarts.
+
+## Environment
+
+Use `.env.example` as the template:
+
+```bash
+PORT=8000
+POKER_FACE_MODEL=gpt-image-2
+POKER_FACE_RELAY_URL=https://deepsy.top
+POKER_FACE_RELAY_API_KEY=replace-with-your-relay-api-key
+POKER_FACE_RELAY_FORMAT=openai
+POKER_FACE_RELAY_AUTH=bearer
+POKER_FACE_REQUEST_TIMEOUT=120
+```
+
+Never hardcode or commit real API keys. `.env` is ignored by Git.
 
 ## Do
-- Read existing code before modifying anything
-- Match existing patterns, naming, and style
-- Handle errors gracefully — no silent failures
-- Keep changes small and scoped to what was asked
-- Run dev/build after changes to verify nothing broke
-- Ask clarifying questions before guessing
-- Treat user photos as sensitive personal data
-- Make privacy, consent, and data deletion behavior clear in the product
-- Present appearance previews as simulations, not medical advice or guaranteed outcomes
-- For the post-upload result screen, use a dense masonry-style image gallery inspired by the reference layout
-- Generate and display at least 15 facial preview images, with 20 preferred for the default result set
-- Keep one larger featured preview and let users select smaller previews to replace it
-- Preserve access to the original uploaded photo for before/after comparison
-- Build the MVP with real AI generation through the configured relay API
-- Keep prompt wording conservative so previews look plausible and natural
-- Prefer desktop-first web UI decisions for the first version
-- Use Local Storage only for V1 user-side persistence unless the user approves a backend storage change
+
+- Read existing code before modifying anything.
+- Keep changes small and scoped to the request.
+- Match current plain JavaScript, HTML, CSS, and Python standard-library patterns.
+- Preserve the no-install MVP unless the user approves new dependencies.
+- Handle errors visibly and gracefully.
+- Keep generation failures isolated per effect when possible.
+- Use `safeSaveState()` for frontend persistence so storage failures do not break generation.
+- Keep `localStorage` state lightweight; persist metadata only.
+- Treat user photos as sensitive personal data.
+- Present previews as simulations, not medical advice.
+- Keep prompts realistic, conservative, and identity-preserving.
+- Run `python -m py_compile app.py` after backend changes.
+- Run `node --check static\app.js` after frontend JS changes.
 
 ## Don't
-- Install new dependencies without asking
-- Delete or overwrite files without confirming
-- Hardcode secrets, API keys, or credentials
-- Rewrite working code unless explicitly asked
-- Push, deploy, or force-push without permission
-- Make changes outside the scope of the request
-- Store uploaded faces longer than necessary without explicit consent
-- Make claims that a simulated result is medically accurate
-- Encourage users to take cosmetic action without consulting qualified professionals
-- Cover key facial areas such as eyes, nose, or lips with labels or controls
-- Use language that judges or shames a user's natural features
-- Replace real generation with static mock images for MVP unless explicitly asked
-- Add accounts, authentication, or cloud persistence in V1 unless explicitly requested
-- Make facial edits extreme, exaggerated, or identity-changing by default
+
+- Do not install dependencies without asking.
+- Do not add accounts, authentication, backend storage, or cloud persistence unless requested.
+- Do not commit `.env`, API keys, user photos, generated images, or logs.
+- Do not store uploaded or generated base64 images in `localStorage`.
+- Do not replace real generation with static mock images unless explicitly asked.
+- Do not remove the GPT image path in favor of Gemini.
+- Do not uncomment or activate Gemini generation unless explicitly requested.
+- Do not make facial edits extreme, exaggerated, or identity-changing by default.
+- Do not use language that judges or shames natural facial features.
+- Do not cover important face areas with labels or controls.
+- Do not push, deploy, force-push, or rewrite Git history without permission.
 
 ## Result Gallery Requirements
-- Use the uploaded face as the source image
-- Show the original plus generated facial variation previews
-- Use a 3-column masonry grid on mobile
-- Use 4-5 columns on desktop when space allows
-- Keep image gaps tight and consistent, around 8px on mobile and 10-12px on desktop
-- Use rounded image cards with an 8px radius
-- Make images fill each card edge to edge
-- Place a larger featured preview near the center on mobile or left-center on desktop
-- Let users tap a card to select it as the featured preview
-- Support compare, save, delete, and regenerate actions
-- Show loading progress such as "8 of 20 generated"
-- If one generation fails, allow retrying that effect without deleting successful results
 
-## When Stuck
-- If a task is large, break it into steps and confirm the plan first
-- If you can't fix an error in 2 attempts, stop and explain the issue
+- Use the uploaded face as the source image for generation.
+- Show the original plus generated facial variation previews during the active session.
+- Use a masonry grid with tight gaps.
+- Use rounded image cards with an 8px radius.
+- Make images fill cards edge to edge.
+- Support selecting a card as the featured preview.
+- Support compare, save toggle, delete, and regenerate.
+- Show progress such as `8 of 20`.
+- Show current generation status, such as `Generating Under-eye`.
+- If one effect fails, keep successful results and continue when the error is recoverable.
 
-## Testing
-- Run existing tests after any change
-- Add at least one test for new features
-- Never skip or delete tests to make things pass
+## Current Preview Effects
+
+- Smaller nose
+- Nose bridge
+- Nose tip
+- Lip filler
+- Upper lip
+- Lower lip
+- Fox eye lift
+- Brow lift
+- Eyelid lift
+- Face lift
+- Jawline
+- Chin refinement
+- Cheek volume
+- Cheekbone
+- Forehead smoothing
+- Crow's feet
+- Under-eye
+- Skin tone
+- Skin texture
+- Facial slimming
+
+## Privacy And Safety
+
+- Uploaded face photos are sensitive personal data.
+- The MVP keeps image data in browser memory for the active page session.
+- Lightweight UI state may be stored in `localStorage`.
+- Users must be able to clear local session state.
+- Results must be labeled and treated as simulations.
+- Do not claim medical accuracy or guaranteed real-world outcomes.
+- Users should consult qualified professionals before cosmetic procedures.
 
 ## Git
-- Small, focused commits with descriptive messages
-- Never force push
+
+- Make small, focused commits with descriptive messages when asked.
+- Never force push.
+- Do not revert user changes unless explicitly requested.
+- Runtime files ignored by Git include `.env`, `__pycache__/`, `*.pyc`, `server.out.log`, and `server.err.log`.
+
+## When Stuck
+
+- If a task is large, break it into steps and confirm the plan first.
+- If the same error cannot be fixed after two serious attempts, stop and explain the issue.
 
 ## Response Style
-- always respond with clear & concise messages
-- use plain English when explaining to the User
-- avoid long sentences, complex words, or long paragraphs
+
+- Always respond with clear and concise messages.
+- Use plain English when explaining to the user.
+- Avoid long paragraphs and unnecessary detail.
+
