@@ -8,6 +8,9 @@
   --line: #ddd6ce;
   --accent: #b44d5f;
   --accent-dark: #843546;
+  --filter-accent: #d75c38;
+  --filter-accent-dark: #bd4829;
+  --filter-soft: #f4b29f;
   --ok: #2f7d5c;
   --warn: #9a5b18;
   --shadow: 0 18px 45px rgba(41, 32, 26, 0.12);
@@ -185,6 +188,99 @@ select {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-top: 14px;
+}
+
+.filter-panel {
+  padding: 22px 16px 14px;
+  border: 1px solid #efe2dc;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 12px 30px rgba(99, 57, 42, 0.08);
+  margin-bottom: 14px;
+}
+
+.filter-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.filter-head h2 {
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.filter-head span {
+  color: #45403b;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 8px;
+}
+
+.filter-chip {
+  min-height: 34px;
+  max-width: 100%;
+  border: 0;
+  border-radius: 999px;
+  background: #f2e4de;
+  color: #6b5148;
+  padding: 0 15px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: inset 0 0 0 1px rgba(122, 80, 65, 0.08);
+}
+
+.filter-chip.selected {
+  background: var(--filter-accent);
+  color: #fff;
+  box-shadow: 0 5px 12px rgba(190, 72, 41, 0.2);
+}
+
+.filter-chip:hover {
+  border-color: transparent;
+  background: var(--filter-accent-dark);
+  color: #fff;
+}
+
+.session-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.session-actions button {
+  min-width: 0;
+  min-height: 48px;
+  border-radius: 999px;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.generate-photo.primary {
+  border-color: var(--filter-soft);
+  background: var(--filter-soft);
+  color: #fff;
+}
+
+.generate-photo.primary:not(:disabled):hover {
+  border-color: var(--filter-accent);
+  background: var(--filter-accent);
+}
+
+.clear-session {
+  border-color: #f0e6e2;
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .status-row {

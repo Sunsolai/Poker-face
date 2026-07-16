@@ -26,6 +26,7 @@ const state = {
   sourceImage: "",
   results: [],
   selectedId: "",
+  selectedEffects: EFFECTS.map(([effectId]) => effectId),
   generating: false,
   relayConfigured: false,
   readyForGeneration: false,
@@ -37,6 +38,8 @@ const nodes = {
   intensity: document.querySelector("#intensity"),
   generateAll: document.querySelector("#generateAll"),
   clearAll: document.querySelector("#clearAll"),
+  effectFilters: document.querySelector("#effectFilters"),
+  selectedCount: document.querySelector("#selectedCount"),
   modelName: document.querySelector("#modelName"),
   relayState: document.querySelector("#relayState"),
   progressText: document.querySelector("#progressText"),
@@ -58,6 +61,7 @@ function saveState() {
       sourceImage: state.sourceImage,
       results: state.results,
       selectedId: state.selectedId,
+      selectedEffects: state.selectedEffects,
     }),
   );
 }
@@ -68,6 +72,10 @@ function loadState() {
     state.sourceImage = saved.sourceImage || "";
     state.results = Array.isArray(saved.results) ? saved.results : [];
     state.selectedId = saved.selectedId || state.results[0]?.id || "";
+    if (Array.isArray(saved.selectedEffects)) {
+      const knownEffects = new Set(EFFECTS.map(([effectId]) => effectId));
+      state.selectedEffects = saved.selectedEffects.filter((effectId) => knownEffects.has(effectId));
+    }
   } catch {
     localStorage.removeItem(STORAGE_KEY);
   }
@@ -158,6 +166,30 @@ function renderGallery() {
   });
 }
 
+function renderEffectFilters() {
+  const selected = new Set(state.selectedEffects);
+  nodes.effectFilters.innerHTML = "";
+  nodes.selectedCount.textContent = `${state.selectedEffects.length} selected`;
+
+  EFFECTS.forEach(([effectId, label]) => {
+    const chip = document.createElement("button");
+    chip.className = selected.has(effectId) ? "filter-chip selected" : "filter-chip";
+    chip.type = "button";
+    chip.textContent = label;
+    chip.setAttribute("aria-pressed", String(selected.has(effectId)));
+    chip.addEventListener("click", () => {
+      if (selected.has(effectId)) {
+        state.selectedEffects = state.selectedEffects.filter((item) => item !== effectId);
+      } else {
+        state.selectedEffects = [...state.selectedEffects, effectId];
+      }
+      saveState();
+      render();
+    });
+    nodes.effectFilters.append(chip);
+  });
+}
+
 function updateComparePanel() {
   const selected = selectedResult();
   if (!state.sourceImage || !selected) return;
@@ -166,16 +198,21 @@ function updateComparePanel() {
 }
 
 function updateActions() {
-  const generated = state.results.filter((item) => item.effectId !== "original" && !item.pending && !item.error).length;
-  nodes.progressText.textContent = `${generated} of ${EFFECTS.length}`;
-  nodes.generateAll.disabled = !state.sourceImage || state.generating || !state.readyForGeneration;
-  nodes.generateAll.textContent = state.readyForGeneration ? "Generate set" : "Image model needed";
+  const selectedSet = new Set(state.selectedEffects);
+  const generated = state.results.filter(
+    (item) => selectedSet.has(item.effectId) && !item.pending && !item.error,
+  ).length;
+  const selectedTotal = state.selectedEffects.length;
+  nodes.progressText.textContent = `${generated} of ${selectedTotal}`;
+  nodes.generateAll.disabled = !state.sourceImage || state.generating || !state.readyForGeneration || selectedTotal === 0;
+  nodes.generateAll.textContent = state.readyForGeneration ? "Generate photo" : "Image model needed";
   nodes.regenerateSelected.disabled = !state.sourceImage || state.generating || selectedResult()?.effectId === "original";
   nodes.deleteSelected.disabled = !selectedResult() || selectedResult()?.effectId === "original";
 }
 
 function render() {
   updateSourcePreview();
+  renderEffectFilters();
   renderGallery();
   updateComparePanel();
   updateActions();
@@ -231,13 +268,15 @@ async function generateEffect(effectId, label) {
 
 async function generateAll() {
   if (!state.sourceImage || state.generating) return;
+  const selectedEffects = EFFECTS.filter(([effectId]) => state.selectedEffects.includes(effectId));
+  if (selectedEffects.length === 0) return;
   state.generating = true;
   state.results = state.results.filter((item) => item.effectId === "original");
   state.selectedId = "original";
   saveState();
   updateActions();
 
-  for (const [effectId, label] of EFFECTS) {
+  for (const [effectId, label] of selectedEffects) {
     try {
       await generateEffect(effectId, label);
     } catch (error) {
@@ -301,6 +340,7 @@ nodes.clearAll.addEventListener("click", () => {
   state.sourceImage = "";
   state.results = [];
   state.selectedId = "";
+  state.selectedEffects = EFFECTS.map(([effectId]) => effectId);
   render();
 });
 nodes.compareToggle.addEventListener("click", () => {

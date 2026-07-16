@@ -36,12 +36,20 @@
               <option value="defined">Defined</option>
             </select>
           </div>
-
-          <div class="actions">
-            <button class="primary" id="generateAll" type="button">Generate set</button>
-            <button id="clearAll" type="button">Clear local data</button>
-          </div>
         </section>
+
+        <section class="filter-panel" aria-labelledby="filterTitle">
+          <div class="filter-head">
+            <h2 id="filterTitle">Preview set</h2>
+            <span id="selectedCount">20 selected</span>
+          </div>
+          <div class="filter-chips" id="effectFilters"></div>
+        </section>
+
+        <div class="session-actions">
+          <button class="primary generate-photo" id="generateAll" type="button">Generate photo</button>
+          <button class="clear-session" id="clearAll" type="button">Clear session</button>
+        </div>
 
         <section class="panel status-panel">
           <div class="status-row">
