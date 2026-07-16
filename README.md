@@ -33,7 +33,7 @@ The app should help users explore how different facial changes might look on the
 ## Commands
 
 - **Install:** no package install required for the current MVP
-- **Dev:** `python app.py`
+- **Dev:** `python app.py` starts the local server with file watching and automatic restart
 - **Open:** `http://127.0.0.1:8000`
 - **Syntax check:** `python -m py_compile app.py`
 

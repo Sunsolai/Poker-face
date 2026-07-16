@@ -5,6 +5,7 @@ import json
 import mimetypes
 import os
 import re
+import subprocess
 import sys
 import time
 import urllib.error
@@ -42,6 +43,8 @@ RELAY_FORMAT = os.environ.get("POKER_FACE_RELAY_FORMAT", "openai").strip().lower
 RELAY_AUTH = os.environ.get("POKER_FACE_RELAY_AUTH", "bearer").strip().lower()
 REQUEST_TIMEOUT = int(os.environ.get("POKER_FACE_REQUEST_TIMEOUT", "120"))
 IMAGE_MODEL_HINTS = ("image", "imagen")
+DEV_RELOAD_TOKEN = os.environ.get("POKER_FACE_RELOAD_TOKEN", str(int(time.time() * 1000)))
+DEV_CHILD_FLAG = "POKER_FACE_DEV_CHILD"
 
 
 EFFECT_PROMPTS = {
@@ -308,6 +311,10 @@ class PokerFaceHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self) -> None:
+        if self.path == "/api/dev-version":
+            self.send_json(200, {"version": DEV_RELOAD_TOKEN})
+            return
+
         if self.path == "/api/config":
             image_model_configured = any(hint in MODEL.lower() for hint in IMAGE_MODEL_HINTS)
             self.send_json(
@@ -369,5 +376,64 @@ def main() -> None:
     server.serve_forever()
 
 
+def watched_files() -> list[Path]:
+    files = [ROOT / "app.py", ROOT / ".env", ROOT / ".env.example", ROOT / "README.md", ROOT / "AGENTS.md"]
+    files.extend(path for path in STATIC_DIR.rglob("*") if path.is_file())
+    return files
+
+
+def watch_snapshot() -> dict[str, int]:
+    snapshot: dict[str, int] = {}
+    for path in watched_files():
+        try:
+            snapshot[str(path)] = path.stat().st_mtime_ns
+        except OSError:
+            snapshot[str(path)] = 0
+    return snapshot
+
+
+def start_child() -> subprocess.Popen[bytes]:
+    env = os.environ.copy()
+    env[DEV_CHILD_FLAG] = "1"
+    env["POKER_FACE_RELOAD_TOKEN"] = str(int(time.time() * 1000))
+    return subprocess.Popen([sys.executable, str(ROOT / "app.py")], cwd=ROOT, env=env)
+
+
+def stop_child(process: subprocess.Popen[bytes]) -> None:
+    if process.poll() is not None:
+        return
+    process.terminate()
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=5)
+
+
+def run_dev_server() -> None:
+    print("Poker Face dev watcher running. File changes restart the app automatically.")
+    child = start_child()
+    snapshot = watch_snapshot()
+    try:
+        while True:
+            time.sleep(1)
+            if child.poll() is not None:
+                print("App process exited. Restarting...")
+                child = start_child()
+                snapshot = watch_snapshot()
+                continue
+            next_snapshot = watch_snapshot()
+            if next_snapshot != snapshot:
+                print("Change detected. Restarting app...")
+                stop_child(child)
+                child = start_child()
+                snapshot = next_snapshot
+    except KeyboardInterrupt:
+        stop_child(child)
+
+
 if __name__ == "__main__":
-    main()
+    if os.environ.get(DEV_CHILD_FLAG) == "1":
+        main()
+    else:
+        run_dev_server()

@@ -301,6 +301,14 @@ select {
   text-align: right;
 }
 
+.generation-status strong {
+  max-width: 170px;
+  overflow: hidden;
+  color: var(--accent-dark);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .disclaimer {
   font-size: 13px;
 }

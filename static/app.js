@@ -22,11 +22,15 @@ const EFFECTS = [
 ];
 
 const STORAGE_KEY = "poker-face-session-v1";
+const GENERATION_TIMEOUT_MS = 150000;
+const DEV_RELOAD_INTERVAL_MS = 1000;
+let devVersion = "";
 const state = {
   sourceImage: "",
   results: [],
   selectedId: "",
   selectedEffects: EFFECTS.map(([effectId]) => effectId),
+  currentGenerationLabel: "",
   generating: false,
   relayConfigured: false,
   readyForGeneration: false,
@@ -43,6 +47,7 @@ const nodes = {
   modelName: document.querySelector("#modelName"),
   relayState: document.querySelector("#relayState"),
   progressText: document.querySelector("#progressText"),
+  generationStatus: document.querySelector("#generationStatus"),
   gallery: document.querySelector("#gallery"),
   emptyState: document.querySelector("#emptyState"),
   cardTemplate: document.querySelector("#cardTemplate"),
@@ -55,26 +60,37 @@ const nodes = {
 };
 
 function saveState() {
+  const lightweightResults = state.results.map(({ image, prompt, ...item }) => item);
   localStorage.setItem(
     STORAGE_KEY,
     JSON.stringify({
-      sourceImage: state.sourceImage,
-      results: state.results,
       selectedId: state.selectedId,
       selectedEffects: state.selectedEffects,
+      results: lightweightResults,
     }),
   );
+}
+
+function safeSaveState() {
+  try {
+    saveState();
+  } catch (error) {
+    console.warn("State save failed:", error);
+  }
 }
 
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-    state.sourceImage = saved.sourceImage || "";
-    state.results = Array.isArray(saved.results) ? saved.results : [];
-    state.selectedId = saved.selectedId || state.results[0]?.id || "";
+    state.sourceImage = "";
+    state.results = [];
+    state.selectedId = saved.selectedId || "";
     if (Array.isArray(saved.selectedEffects)) {
       const knownEffects = new Set(EFFECTS.map(([effectId]) => effectId));
       state.selectedEffects = saved.selectedEffects.filter((effectId) => knownEffects.has(effectId));
+    }
+    if (saved.sourceImage || saved.results?.some((item) => item.image)) {
+      safeSaveState();
     }
   } catch {
     localStorage.removeItem(STORAGE_KEY);
@@ -94,7 +110,7 @@ function setSourceImage(dataUrl) {
     },
   ];
   state.selectedId = "original";
-  saveState();
+  safeSaveState();
   render();
 }
 
@@ -151,14 +167,14 @@ function renderGallery() {
 
     card.addEventListener("click", () => {
       state.selectedId = item.id;
-      saveState();
+      safeSaveState();
       render();
     });
 
     save.addEventListener("click", (event) => {
       event.stopPropagation();
       item.saved = !item.saved;
-      saveState();
+      safeSaveState();
       render();
     });
 
@@ -183,7 +199,7 @@ function renderEffectFilters() {
       } else {
         state.selectedEffects = [...state.selectedEffects, effectId];
       }
-      saveState();
+      safeSaveState();
       render();
     });
     nodes.effectFilters.append(chip);
@@ -204,6 +220,9 @@ function updateActions() {
   ).length;
   const selectedTotal = state.selectedEffects.length;
   nodes.progressText.textContent = `${generated} of ${selectedTotal}`;
+  nodes.generationStatus.textContent = state.generating
+    ? `Generating ${state.currentGenerationLabel || "preview"}`
+    : "Idle";
   nodes.generateAll.disabled = !state.sourceImage || state.generating || !state.readyForGeneration || selectedTotal === 0;
   nodes.generateAll.textContent = state.readyForGeneration ? "Generate photo" : "Image model needed";
   nodes.regenerateSelected.disabled = !state.sourceImage || state.generating || selectedResult()?.effectId === "original";
@@ -238,13 +257,47 @@ async function loadConfig() {
   }
 }
 
+async function watchDevReload() {
+  try {
+    const response = await fetch("/api/dev-version", { cache: "no-store" });
+    const payload = await response.json();
+    if (!devVersion) {
+      devVersion = payload.version;
+      return;
+    }
+    if (payload.version && payload.version !== devVersion) {
+      window.location.reload();
+    }
+  } catch {
+    // The backend may be restarting. The next poll will reload when it is back.
+  }
+}
+
+function timeoutMessage(label) {
+  return `${label} took too long. Please retry this effect.`;
+}
+
+function fetchWithTimeout(url, options, timeoutMs, label) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal })
+    .catch((error) => {
+      if (error.name === "AbortError") {
+        throw new Error(timeoutMessage(label));
+      }
+      throw error;
+    })
+    .finally(() => window.clearTimeout(timeoutId));
+}
+
 async function generateEffect(effectId, label) {
   const pendingId = `pending-${effectId}`;
+  state.currentGenerationLabel = label;
   state.results = state.results.filter((item) => item.effectId !== effectId);
   state.results.push({ id: pendingId, effectId, label, pending: true });
   render();
 
-  const response = await fetch("/api/generate", {
+  const response = await fetchWithTimeout("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -253,7 +306,7 @@ async function generateEffect(effectId, label) {
       label,
       intensity: nodes.intensity.value,
     }),
-  });
+  }, GENERATION_TIMEOUT_MS, label);
   const payload = await response.json();
   if (!response.ok || payload.error) {
     throw new Error(payload.error || "Generation failed.");
@@ -262,7 +315,7 @@ async function generateEffect(effectId, label) {
   state.results = state.results.filter((item) => item.id !== pendingId);
   state.results.push(payload.result);
   state.selectedId = payload.result.id;
-  saveState();
+  safeSaveState();
   render();
 }
 
@@ -273,31 +326,34 @@ async function generateAll() {
   state.generating = true;
   state.results = state.results.filter((item) => item.effectId === "original");
   state.selectedId = "original";
-  saveState();
+  safeSaveState();
   updateActions();
 
-  for (const [effectId, label] of selectedEffects) {
-    try {
-      await generateEffect(effectId, label);
-    } catch (error) {
-      state.results = state.results.filter((item) => item.id !== `pending-${effectId}`);
-      state.results.push({
-        id: `error-${effectId}-${Date.now()}`,
-        effectId,
-        label,
-        error: error.message,
-      });
-      saveState();
-      render();
-      if (/Relay API error (400|401|403|429|500|502|503|504)|model_not_found|no available channel|not configured|not an image generation model|connection failed/i.test(error.message)) {
-        alert(`Generation stopped: ${error.message}`);
-        break;
+  try {
+    for (const [effectId, label] of selectedEffects) {
+      try {
+        await generateEffect(effectId, label);
+      } catch (error) {
+        state.results = state.results.filter((item) => item.id !== `pending-${effectId}`);
+        state.results.push({
+          id: `error-${effectId}-${Date.now()}`,
+          effectId,
+          label,
+          error: error.message,
+        });
+        safeSaveState();
+        render();
+        if (/Relay API error (400|401|403)|model_not_found|not configured|not an image generation model/i.test(error.message)) {
+          alert(`Generation stopped: ${error.message}`);
+          break;
+        }
       }
     }
+  } finally {
+    state.currentGenerationLabel = "";
+    state.generating = false;
+    render();
   }
-
-  state.generating = false;
-  render();
 }
 
 async function regenerateSelected() {
@@ -320,7 +376,7 @@ function deleteSelected() {
   if (!selected || selected.effectId === "original") return;
   state.results = state.results.filter((item) => item.id !== selected.id);
   state.selectedId = state.results[0]?.id || "";
-  saveState();
+  safeSaveState();
   render();
 }
 
@@ -351,3 +407,5 @@ nodes.compareToggle.addEventListener("click", () => {
 loadState();
 render();
 loadConfig();
+watchDevReload();
+window.setInterval(watchDevReload, DEV_RELOAD_INTERVAL_MS);
