@@ -1,0 +1,2 @@
+# Poker Face uses only the Python standard library — no third-party deps.
+# This file exists so Vercel detects the Python runtime for api/index.py.

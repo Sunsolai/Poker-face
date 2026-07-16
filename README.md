@@ -1,3 +1,13 @@
+---
+title: Poker Face
+emoji: 🃏
+colorFrom: pink
+colorTo: gray
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Poker Face
 
 Poker Face is an app concept for women aged 18-55 who want to upload a selfie and preview possible facial aesthetic changes before making any real-world decision.
