@@ -370,8 +370,9 @@ class PokerFaceHandler(BaseHTTPRequestHandler):
 
 def main() -> None:
     port = int(os.environ.get("PORT", "8000"))
-    server = ThreadingHTTPServer(("127.0.0.1", port), PokerFaceHandler)
-    print(f"Poker Face running at http://127.0.0.1:{port}")
+    host = os.environ.get("HOST", "0.0.0.0")
+    server = ThreadingHTTPServer((host, port), PokerFaceHandler)
+    print(f"Poker Face running at http://{host}:{port}")
     print("Configure POKER_FACE_RELAY_URL and POKER_FACE_RELAY_API_KEY for real generation.")
     server.serve_forever()
 
@@ -435,5 +436,7 @@ def run_dev_server() -> None:
 if __name__ == "__main__":
     if os.environ.get(DEV_CHILD_FLAG) == "1":
         main()
-    else:
+    elif os.environ.get("POKER_FACE_DEV") == "1":
         run_dev_server()
+    else:
+        main()
