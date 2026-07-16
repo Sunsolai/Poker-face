@@ -7,7 +7,8 @@ The app should help users explore how different facial changes might look on the
 ## MVP/V1 Decisions
 
 - Real AI generation is required for the MVP.
-- The image generation model should be `gemini-3.1-flash-image-preview`.
+- The active image generation model should be `gpt-image-2`.
+- Gemini image generation is kept only as commented reference code.
 - The model should be accessed through a relay API.
 - The app should be a desktop-first web application.
 - The gallery experience should follow a Pinterest-style masonry layout.
@@ -48,31 +49,34 @@ Required for real generation:
 Optional:
 
 - `PORT`, default `8000`
-- `POKER_FACE_MODEL`, default `gemini-3.1-flash-image-preview`
-- `POKER_FACE_RELAY_FORMAT`, default `gemini`
+- `POKER_FACE_MODEL`, default `gpt-image-2`
+- `POKER_FACE_RELAY_FORMAT`, default `openai`
 - `POKER_FACE_RELAY_AUTH`, default `bearer`
 - `POKER_FACE_REQUEST_TIMEOUT`, default `120`
 
-If the relay API uses a Gemini-style query key instead of bearer auth, set:
+The current GPT image path expects an OpenAI-compatible image edit relay:
 
 ```bash
-POKER_FACE_RELAY_AUTH=query
+POKER_FACE_MODEL=gpt-image-2
+POKER_FACE_RELAY_FORMAT=openai
+POKER_FACE_RELAY_AUTH=bearer
 ```
 
 ## Relay API Contract
 
-The backend supports two relay formats:
+The active backend path uses GPT image generation through an OpenAI-compatible relay.
 
-- `POKER_FACE_RELAY_FORMAT=gemini`: sends a Gemini-style `generateContent` JSON payload with text prompt and inline base64 image data.
-- `POKER_FACE_RELAY_FORMAT=openai`: sends an OpenAI-style image payload with `model`, `prompt`, `image`, `n`, and `size`.
+- `POKER_FACE_RELAY_FORMAT=openai`: sends an OpenAI-style multipart image edit request with `model`, `prompt`, `image[]`, `n`, `size`, and `quality`.
 
-For Gemini-style relays, `POKER_FACE_RELAY_URL` may be either:
+For OpenAI-compatible relays, `POKER_FACE_RELAY_URL` may be either:
 
-- a base URL, where the app appends `/v1beta/models/{model}:generateContent`
-- a full endpoint URL containing `{model}`
-- a full endpoint URL that already ends in `:generateContent`
+- a base URL, where the app appends `/v1/images/edits`
+- a `/v1` URL, where the app appends `/images/edits`
+- a full endpoint URL that already ends in `/images/edits`
 
-The backend accepts image responses from common formats, including Gemini `inlineData`, OpenAI `b64_json`, direct `url`, or generic base64 fields.
+The backend accepts GPT image responses from common formats, including OpenAI `b64_json`, direct `url`, or generic base64 fields. Gemini `inlineData` parsing remains present for compatibility, but Gemini generation is not active.
+
+Commented Gemini reference code remains in `app.py` for a possible future switch back to Gemini-style `generateContent` payloads.
 
 ## Target Users
 

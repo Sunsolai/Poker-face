@@ -8,7 +8,8 @@
 
 ## MVP/V1 Decisions
 - **Generation:** MVP must use real AI image generation, not static mock results.
-- **Model:** use `gemini-3.1-flash-image-preview` through a relay API.
+- **Model:** use `gpt-image-2` through an OpenAI-compatible relay API.
+- **Gemini:** keep Gemini image generation logic only as commented reference code.
 - **Platform:** web app, desktop-first.
 - **Gallery:** Pinterest-style masonry gallery experience.
 - **Mobile:** defer mobile migration until later unless explicitly requested.

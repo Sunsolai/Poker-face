@@ -35,10 +35,10 @@ def load_env_file() -> None:
 
 load_env_file()
 
-MODEL = os.environ.get("POKER_FACE_MODEL", "gemini-3.1-flash-image-preview")
+MODEL = os.environ.get("POKER_FACE_MODEL", "gpt-image-2")
 RELAY_URL = os.environ.get("POKER_FACE_RELAY_URL", "").strip()
 RELAY_API_KEY = os.environ.get("POKER_FACE_RELAY_API_KEY", "").strip()
-RELAY_FORMAT = os.environ.get("POKER_FACE_RELAY_FORMAT", "gemini").strip().lower()
+RELAY_FORMAT = os.environ.get("POKER_FACE_RELAY_FORMAT", "openai").strip().lower()
 RELAY_AUTH = os.environ.get("POKER_FACE_RELAY_AUTH", "bearer").strip().lower()
 REQUEST_TIMEOUT = int(os.environ.get("POKER_FACE_REQUEST_TIMEOUT", "120"))
 IMAGE_MODEL_HINTS = ("image", "imagen")
@@ -92,16 +92,6 @@ def build_prompt(effect_label: str, effect_prompt: str, intensity: str) -> str:
     )
 
 
-def relay_endpoint() -> str:
-    if not RELAY_URL:
-        return ""
-    if "{model}" in RELAY_URL:
-        return RELAY_URL.format(model=urllib.parse.quote(MODEL, safe=""))
-    if RELAY_FORMAT == "gemini" and ":generateContent" not in RELAY_URL:
-        return RELAY_URL.rstrip("/") + f"/v1beta/models/{urllib.parse.quote(MODEL, safe='')}:generateContent"
-    return RELAY_URL
-
-
 def openai_image_edit_endpoint() -> str:
     url = RELAY_URL.rstrip("/")
     if url.endswith("/images/edits"):
@@ -129,29 +119,30 @@ def add_query_key(url: str) -> str:
     return f"{url}{separator}key={urllib.parse.quote(RELAY_API_KEY)}"
 
 
-def gemini_payload(prompt: str, mime: str, image_b64: str) -> dict[str, Any]:
-    return {
-        "contents": [
-            {
-                "role": "user",
-                "parts": [
-                    {"text": prompt},
-                    {"inlineData": {"mimeType": mime, "data": image_b64}},
-                ],
-            }
-        ],
-        "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]},
-    }
-
-
-def openai_payload(prompt: str, data_url: str) -> dict[str, Any]:
-    return {
-        "model": MODEL,
-        "prompt": prompt,
-        "image": data_url,
-        "n": 1,
-        "size": "1024x1024",
-    }
+# Gemini relay reference code, intentionally inactive for the current GPT image path.
+# def gemini_relay_endpoint() -> str:
+#     if not RELAY_URL:
+#         return ""
+#     if "{model}" in RELAY_URL:
+#         return RELAY_URL.format(model=urllib.parse.quote(MODEL, safe=""))
+#     if ":generateContent" not in RELAY_URL:
+#         return RELAY_URL.rstrip("/") + f"/v1beta/models/{urllib.parse.quote(MODEL, safe='')}:generateContent"
+#     return RELAY_URL
+#
+#
+# def gemini_payload(prompt: str, mime: str, image_b64: str) -> dict[str, Any]:
+#     return {
+#         "contents": [
+#             {
+#                 "role": "user",
+#                 "parts": [
+#                     {"text": prompt},
+#                     {"inlineData": {"mimeType": mime, "data": image_b64}},
+#                 ],
+#             }
+#         ],
+#         "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]},
+#     }
 
 
 def multipart_body(fields: dict[str, str], files: list[dict[str, Any]]) -> tuple[bytes, str]:
@@ -267,30 +258,31 @@ def request_openai_image_edit(data_url: str, prompt: str) -> dict[str, Any]:
 def generate_image(data_url: str, effect_id: str, effect_label: str, intensity: str) -> dict[str, Any]:
     if not RELAY_URL:
         raise RuntimeError("POKER_FACE_RELAY_URL is not configured.")
+    if RELAY_FORMAT != "openai":
+        raise RuntimeError("POKER_FACE_RELAY_FORMAT must be 'openai' for the active GPT image path.")
 
-    mime, image_b64 = parse_data_url(data_url)
     prompt = build_prompt(effect_label, EFFECT_PROMPTS.get(effect_id, effect_label), intensity)
-    if RELAY_FORMAT == "openai":
-        parsed = request_openai_image_edit(data_url, prompt)
-    else:
-        payload = gemini_payload(prompt, mime, image_b64)
-        url = add_query_key(relay_endpoint())
-        body = json.dumps(payload).encode("utf-8")
-        request = urllib.request.Request(url, data=body, headers=request_headers(), method="POST")
+    parsed = request_openai_image_edit(data_url, prompt)
 
-        try:
-            with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response:
-                raw = response.read().decode("utf-8")
-        except urllib.error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace")
-            raise RuntimeError(compact_relay_error(exc.code, detail)) from exc
-        except urllib.error.URLError as exc:
-            raise RuntimeError(f"Relay API connection failed: {exc.reason}") from exc
+    # Gemini relay reference flow, intentionally inactive for the current GPT image path.
+    # mime, image_b64 = parse_data_url(data_url)
+    # payload = gemini_payload(prompt, mime, image_b64)
+    # url = add_query_key(gemini_relay_endpoint())
+    # body = json.dumps(payload).encode("utf-8")
+    # request = urllib.request.Request(url, data=body, headers=request_headers(), method="POST")
+    # try:
+    #     with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT) as response:
+    #         raw = response.read().decode("utf-8")
+    # except urllib.error.HTTPError as exc:
+    #     detail = exc.read().decode("utf-8", errors="replace")
+    #     raise RuntimeError(compact_relay_error(exc.code, detail)) from exc
+    # except urllib.error.URLError as exc:
+    #     raise RuntimeError(f"Relay API connection failed: {exc.reason}") from exc
+    # try:
+    #     parsed = json.loads(raw)
+    # except json.JSONDecodeError as exc:
+    #     raise RuntimeError(f"Relay API returned non-JSON response: {raw[:300]}") from exc
 
-        try:
-            parsed = json.loads(raw)
-        except json.JSONDecodeError as exc:
-            raise RuntimeError(f"Relay API returned non-JSON response: {raw[:300]}") from exc
     return {
         "id": f"{effect_id}-{int(time.time() * 1000)}",
         "effectId": effect_id,
