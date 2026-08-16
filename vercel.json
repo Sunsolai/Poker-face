@@ -1,15 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/config.py": {
-      "maxDuration": 10,
-      "includeFiles": "server.py",
-      "excludeFiles": "{public/**,static/**,assets/**}"
-    },
-    "api/generate.py": {
+    "api/index.py": {
       "maxDuration": 60,
-      "includeFiles": "server.py",
-      "excludeFiles": "{public/**,static/**,assets/**}"
+      "includeFiles": "{server.py,static/**}"
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/", "destination": "/api?__route=/" },
+    { "source": "/(.*)", "destination": "/api?__route=/$1" }
+  ]
 }
