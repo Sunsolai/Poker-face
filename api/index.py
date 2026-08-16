@@ -1,4 +1,8 @@
-"""Vercel function for POST /api/generate."""
+"""Vercel serverless entry point.
+
+Serves API routes for the Poker Face app. Static assets are served from
+``public/`` by Vercel; this handler covers ``/api/*`` and any non-static paths.
+"""
 from __future__ import annotations
 
 import sys
@@ -12,8 +16,4 @@ from pokerface import PokerFaceHandler  # noqa: E402
 
 
 class handler(PokerFaceHandler):  # noqa: N801
-    def do_GET(self) -> None:
-        self.send_error(405)
-
-    def do_POST(self) -> None:
-        self.handle_generate()
+    pass

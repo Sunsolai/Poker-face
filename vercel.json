@@ -1,15 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/config.py": {
-      "maxDuration": 10,
-      "includeFiles": "pokerface.py",
-      "excludeFiles": "{public/**,static/**,assets/**}"
-    },
-    "api/generate.py": {
+    "api/index.py": {
       "maxDuration": 60,
-      "includeFiles": "pokerface.py",
-      "excludeFiles": "{public/**,static/**,assets/**}"
+      "includeFiles": "pokerface.py"
     }
   }
 }
