@@ -1,12 +1,13 @@
 {
+  "buildCommand": "mkdir -p public && cp -r static/. public/",
   "functions": {
-    "api/index.py": {
+    "api/config.py": {
+      "maxDuration": 10,
+      "includeFiles": "app.py"
+    },
+    "api/generate.py": {
       "maxDuration": 60,
-      "includeFiles": "{app.py,static/**}"
+      "includeFiles": "app.py"
     }
-  },
-  "rewrites": [
-    { "source": "/", "destination": "/api?__route=/" },
-    { "source": "/(.*)", "destination": "/api?__route=/$1" }
-  ]
+  }
 }

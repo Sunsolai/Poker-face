@@ -322,60 +322,24 @@ class PokerFaceHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def request_route(self) -> str:
-        """Return the app route.
-
-        Locally this is ``self.path``. On Vercel, catch-all rewrites can replace
-        the path with ``/api``, so we also accept ``?__route=/original/path``.
-        """
         parsed = urllib.parse.urlparse(self.path)
-        params = urllib.parse.parse_qs(parsed.query)
-        route_values = params.get("__route")
-        if route_values:
-            route = route_values[0] or "/"
-            return route if route.startswith("/") else f"/{route}"
         return parsed.path or "/"
 
-    def do_GET(self) -> None:
-        route = self.request_route()
-        if route == "/api/dev-version":
-            self.send_json(200, {"version": DEV_RELOAD_TOKEN})
-            return
+    def handle_config(self) -> None:
+        image_model_configured = any(hint in MODEL.lower() for hint in IMAGE_MODEL_HINTS)
+        self.send_json(
+            200,
+            {
+                "model": MODEL,
+                "relayConfigured": bool(RELAY_URL),
+                "imageModelConfigured": image_model_configured,
+                "readyForGeneration": bool(RELAY_URL) and image_model_configured,
+                "relayFormat": RELAY_FORMAT,
+                "storage": "localStorage",
+            },
+        )
 
-        if route == "/api/config":
-            image_model_configured = any(hint in MODEL.lower() for hint in IMAGE_MODEL_HINTS)
-            self.send_json(
-                200,
-                {
-                    "model": MODEL,
-                    "relayConfigured": bool(RELAY_URL),
-                    "imageModelConfigured": image_model_configured,
-                    "readyForGeneration": bool(RELAY_URL) and image_model_configured,
-                    "relayFormat": RELAY_FORMAT,
-                    "storage": "localStorage",
-                },
-            )
-            return
-
-        static_root = resolve_static_dir()
-        relative = "index.html" if route in {"/", ""} else route.lstrip("/")
-        file_path = static_root / relative
-        if not file_path.resolve().is_relative_to(static_root.resolve()) or not file_path.exists():
-            self.send_error(404)
-            return
-
-        mime = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
-        body = file_path.read_bytes()
-        self.send_response(200)
-        self.send_header("Content-Type", mime)
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
-
-    def do_POST(self) -> None:
-        if self.request_route() != "/api/generate":
-            self.send_error(404)
-            return
-
+    def handle_generate(self) -> None:
         try:
             length = int(self.headers.get("Content-Length", "0"))
             payload = json.loads(self.rfile.read(length).decode("utf-8"))
@@ -393,6 +357,38 @@ class PokerFaceHandler(BaseHTTPRequestHandler):
             self.send_json(200, {"result": result})
         except Exception as exc:
             self.send_json(400, {"error": str(exc)})
+
+    def serve_static(self, route: str) -> None:
+        static_root = resolve_static_dir()
+        relative = "index.html" if route in {"/", ""} else route.lstrip("/")
+        file_path = static_root / relative
+        if not file_path.resolve().is_relative_to(static_root.resolve()) or not file_path.exists():
+            self.send_error(404)
+            return
+
+        mime = mimetypes.guess_type(file_path.name)[0] or "application/octet-stream"
+        body = file_path.read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", mime)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_GET(self) -> None:
+        route = self.request_route()
+        if route == "/api/dev-version":
+            self.send_json(200, {"version": DEV_RELOAD_TOKEN})
+            return
+        if route == "/api/config":
+            self.handle_config()
+            return
+        self.serve_static(route)
+
+    def do_POST(self) -> None:
+        if self.request_route() != "/api/generate":
+            self.send_error(404)
+            return
+        self.handle_generate()
 
 
 def main() -> None:
