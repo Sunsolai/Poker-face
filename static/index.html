@@ -11,68 +11,74 @@
   <body>
     <div class="app-shell">
       <aside class="sidebar">
-        <div class="brand">
-          <div class="brand-mark">PF</div>
-          <div>
-            <h1>Poker Face</h1>
-            <p>Realistic aesthetic previews from one selfie.</p>
+        <div class="brand-row">
+          <div class="brand">
+            <div class="brand-mark">PF</div>
+            <div>
+              <h1>Poker Face</h1>
+              <p data-i18n="brandTagline">Realistic aesthetic previews from one selfie.</p>
+            </div>
+          </div>
+          <div class="lang-switch" role="group" aria-label="Language">
+            <button type="button" class="lang-btn" data-lang="zh" aria-pressed="false">中文</button>
+            <button type="button" class="lang-btn" data-lang="en" aria-pressed="true">EN</button>
           </div>
         </div>
 
         <section class="panel upload-panel">
           <label class="upload-box" for="photoInput">
             <input id="photoInput" type="file" accept="image/*" />
-            <span class="upload-title">Upload portrait</span>
-            <span class="upload-copy">Front-facing photos work best.</span>
+            <span class="upload-title" data-i18n="uploadTitle">Upload portrait</span>
+            <span class="upload-copy" data-i18n="uploadCopy">Front-facing photos work best.</span>
           </label>
 
           <div class="source-preview empty" id="sourcePreview">
-            <span>No photo selected</span>
+            <span data-i18n="noPhoto">No photo selected</span>
           </div>
 
           <div class="field">
-            <label for="intensity">Prompt intensity</label>
+            <label for="intensity" data-i18n="intensity">Prompt intensity</label>
             <select id="intensity">
-              <option value="subtle">Subtle</option>
-              <option value="balanced" selected>Balanced</option>
-              <option value="defined">Defined</option>
+              <option value="subtle" data-i18n="intensitySubtle">Subtle</option>
+              <option value="balanced" selected data-i18n="intensityBalanced">Balanced</option>
+              <option value="defined" data-i18n="intensityDefined">Defined</option>
             </select>
           </div>
         </section>
 
         <section class="filter-panel" aria-labelledby="filterTitle">
           <div class="filter-head">
-            <h2 id="filterTitle">Preview set</h2>
+            <h2 id="filterTitle" data-i18n="previewSet">Preview set</h2>
             <span id="selectedCount">20 selected</span>
           </div>
           <div class="filter-chips" id="effectFilters"></div>
         </section>
 
         <div class="session-actions">
-          <button class="primary generate-photo" id="generateAll" type="button">Generate photo</button>
-          <button class="clear-session" id="clearAll" type="button">Clear session</button>
+          <button class="primary generate-photo" id="generateAll" type="button" data-i18n="generatePhoto">Generate photo</button>
+          <button class="clear-session" id="clearAll" type="button" data-i18n="clearSession">Clear session</button>
         </div>
 
         <section class="panel status-panel">
           <div class="status-row">
-            <span>Model</span>
+            <span data-i18n="model">Model</span>
             <strong id="modelName">Loading</strong>
           </div>
           <div class="status-row">
-            <span>Relay</span>
+            <span data-i18n="relay">Relay</span>
             <strong id="relayState">Checking</strong>
           </div>
           <div class="status-row">
-            <span>Progress</span>
+            <span data-i18n="progress">Progress</span>
             <strong id="progressText">0 of 20</strong>
           </div>
           <div class="status-row generation-status">
-            <span>Status</span>
+            <span data-i18n="status">Status</span>
             <strong id="generationStatus">Idle</strong>
           </div>
         </section>
 
-        <p class="disclaimer">
+        <p class="disclaimer" data-i18n="disclaimer">
           Simulated previews only. Results are not medical advice and may not match real cosmetic outcomes.
         </p>
       </aside>
@@ -80,31 +86,31 @@
       <main class="workspace">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Desktop-first MVP</p>
-            <h2>Preview gallery</h2>
+            <p class="eyebrow" data-i18n="eyebrow">Desktop-first MVP</p>
+            <h2 data-i18n="previewGallery">Preview gallery</h2>
           </div>
           <div class="topbar-actions">
-            <button id="compareToggle" type="button">Compare</button>
-            <button id="regenerateSelected" type="button">Regenerate</button>
-            <button id="deleteSelected" type="button">Delete</button>
+            <button id="compareToggle" type="button" data-i18n="compare">Compare</button>
+            <button id="regenerateSelected" type="button" data-i18n="regenerate">Regenerate</button>
+            <button id="deleteSelected" type="button" data-i18n="delete">Delete</button>
           </div>
         </header>
 
         <section class="compare-panel hidden" id="comparePanel">
           <div>
-            <span>Original</span>
-            <img id="compareOriginal" alt="Original uploaded portrait" />
+            <span data-i18n="original">Original</span>
+            <img id="compareOriginal" alt="Original uploaded portrait" data-i18n-alt="compareOriginalAlt" />
           </div>
           <div>
-            <span>Selected preview</span>
-            <img id="compareGenerated" alt="Selected generated preview" />
+            <span data-i18n="selectedPreview">Selected preview</span>
+            <img id="compareGenerated" alt="Selected generated preview" data-i18n-alt="compareGeneratedAlt" />
           </div>
         </section>
 
         <section class="gallery-wrap">
           <div class="empty-state" id="emptyState">
-            <h3>Upload a selfie to start</h3>
-            <p>The generated results will fill this Pinterest-style gallery as each preview completes.</p>
+            <h3 data-i18n="emptyTitle">Upload a selfie to start</h3>
+            <p data-i18n="emptyCopy">The generated results will fill this Pinterest-style gallery as each preview completes.</p>
           </div>
           <div class="masonry" id="gallery"></div>
         </section>

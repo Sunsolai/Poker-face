@@ -75,11 +75,54 @@ button.primary {
   overflow-y: auto;
 }
 
+.brand-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
 .brand {
   display: flex;
   gap: 14px;
   align-items: center;
-  margin-bottom: 24px;
+  min-width: 0;
+}
+
+.lang-switch {
+  display: inline-flex;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.lang-btn {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.lang-btn + .lang-btn {
+  border-left: 1px solid var(--line);
+}
+
+.lang-btn:hover {
+  border-color: transparent;
+  color: var(--ink);
+}
+
+.lang-btn[aria-pressed="true"] {
+  background: var(--ink);
+  color: #fff;
 }
 
 .brand-mark {
