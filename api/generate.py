@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from server import PokerFaceHandler  # noqa: E402
+from pokerface import PokerFaceHandler  # noqa: E402
 
 
 class handler(PokerFaceHandler):  # noqa: N801

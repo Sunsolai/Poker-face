@@ -401,7 +401,7 @@ def main() -> None:
 
 
 def watched_files() -> list[Path]:
-    files = [ROOT / "server.py", ROOT / ".env", ROOT / ".env.example", ROOT / "README.md", ROOT / "AGENTS.md"]
+    files = [ROOT / "pokerface.py", ROOT / ".env", ROOT / ".env.example", ROOT / "README.md", ROOT / "AGENTS.md"]
     files.extend(path for path in STATIC_DIR.rglob("*") if path.is_file())
     return files
 
@@ -420,7 +420,7 @@ def start_child() -> subprocess.Popen[bytes]:
     env = os.environ.copy()
     env[DEV_CHILD_FLAG] = "1"
     env["POKER_FACE_RELOAD_TOKEN"] = str(int(time.time() * 1000))
-    return subprocess.Popen([sys.executable, str(ROOT / "server.py")], cwd=ROOT, env=env)
+    return subprocess.Popen([sys.executable, str(ROOT / "pokerface.py")], cwd=ROOT, env=env)
 
 
 def stop_child(process: subprocess.Popen[bytes]) -> None:

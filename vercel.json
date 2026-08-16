@@ -3,12 +3,12 @@
   "functions": {
     "api/config.py": {
       "maxDuration": 10,
-      "includeFiles": "server.py",
+      "includeFiles": "pokerface.py",
       "excludeFiles": "{public/**,static/**,assets/**}"
     },
     "api/generate.py": {
       "maxDuration": 60,
-      "includeFiles": "server.py",
+      "includeFiles": "pokerface.py",
       "excludeFiles": "{public/**,static/**,assets/**}"
     }
   }

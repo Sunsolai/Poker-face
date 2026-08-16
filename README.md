@@ -31,7 +31,7 @@ Poker Face is a desktop-first web app for women aged 18–55 who want to upload 
 ## Quick Start
 
 1. Copy `.env.example` to `.env` and fill in your relay API key.
-2. Run `python server.py`.
+2. Run `python pokerface.py`.
 3. Open `http://127.0.0.1:8000`.
 
 No package install is required for the current MVP.
@@ -53,7 +53,7 @@ No package install is required for the current MVP.
 
 ## Current Implementation
 
-- Python standard-library web server in `server.py`
+- Python standard-library web server in `pokerface.py`
 - Static frontend in `static/` (with `public/` for Vercel static serving)
 - OpenAI-compatible GPT image edit relay using `gpt-image-2`
 - Desktop-first masonry gallery with left-side filter panel
@@ -65,17 +65,17 @@ No package install is required for the current MVP.
 
 | Action | Command |
 | --- | --- |
-| Dev | `python server.py` |
+| Dev | `python pokerface.py` |
 | Open | `http://127.0.0.1:8000` |
-| Python syntax check | `python -m py_compile server.py` |
+| Python syntax check | `python -m py_compile pokerface.py` |
 | JS syntax check | `node --check static\app.js` |
 | Install | Not required |
 | Build | Not required |
 | Lint | Not configured yet |
 
-`python server.py` starts a no-dependency development watcher. It restarts the child app when these files change:
+`python pokerface.py` starts a no-dependency development watcher. It restarts the child app when these files change:
 
-- `server.py`
+- `pokerface.py`
 - `.env`
 - `.env.example`
 - `README.md`

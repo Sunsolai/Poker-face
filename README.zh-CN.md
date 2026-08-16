@@ -31,7 +31,7 @@ Poker Face 是一款桌面优先的网页应用，面向 18–55 岁女性用户
 ## 快速开始
 
 1. 将 `.env.example` 复制为 `.env`，并填入中继 API Key。
-2. 运行 `python server.py`。
+2. 运行 `python pokerface.py`。
 3. 在浏览器打开 `http://127.0.0.1:8000`。
 
 当前 MVP 无需安装第三方 Python 依赖。
@@ -53,7 +53,7 @@ Poker Face 是一款桌面优先的网页应用，面向 18–55 岁女性用户
 
 ## 当前实现
 
-- 基于 Python 标准库的 Web 服务：`server.py`
+- 基于 Python 标准库的 Web 服务：`pokerface.py`
 - 静态前端位于 `static/`（Vercel 部署使用 `public/`）
 - 通过 OpenAI 兼容中继调用 `gpt-image-2` 进行图片编辑
 - 桌面优先瀑布流画廊 + 左侧效果筛选面板
@@ -65,17 +65,17 @@ Poker Face 是一款桌面优先的网页应用，面向 18–55 岁女性用户
 
 | 操作 | 命令 |
 | --- | --- |
-| 开发启动 | `python server.py` |
+| 开发启动 | `python pokerface.py` |
 | 打开应用 | `http://127.0.0.1:8000` |
-| Python 语法检查 | `python -m py_compile server.py` |
+| Python 语法检查 | `python -m py_compile pokerface.py` |
 | JS 语法检查 | `node --check static\app.js` |
 | 安装依赖 | 当前无需安装 |
 | 构建 | 当前无需构建 |
 | 代码检查 | 暂未配置 |
 
-`python server.py` 会启动无依赖开发监视器，下列文件变更时自动重启子进程：
+`python pokerface.py` 会启动无依赖开发监视器，下列文件变更时自动重启子进程：
 
-- `server.py`
+- `pokerface.py`
 - `.env`
 - `.env.example`
 - `README.md`
