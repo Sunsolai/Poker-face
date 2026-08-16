@@ -1,9 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "server.py": {
+    "api/config.py": {
+      "maxDuration": 10,
+      "includeFiles": "server.py",
+      "excludeFiles": "{public/**,static/**,assets/**}"
+    },
+    "api/generate.py": {
       "maxDuration": 60,
-      "includeFiles": "static/**"
+      "includeFiles": "server.py",
+      "excludeFiles": "{public/**,static/**,assets/**}"
     }
   }
 }

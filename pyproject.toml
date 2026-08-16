@@ -1,2 +1,6 @@
-[tool.vercel]
-entrypoint = "server:handler"
+[project]
+name = "poker-face"
+version = "0.1.0"
+description = "Desktop-first AI facial aesthetic preview web app"
+requires-python = ">=3.12"
+dependencies = []
