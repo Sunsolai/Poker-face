@@ -391,6 +391,12 @@ class PokerFaceHandler(BaseHTTPRequestHandler):
         self.handle_generate()
 
 
+# Vercel detects server.py as a Python entrypoint and requires a top-level
+# `handler` class (aliases are not detected by its AST check).
+class handler(PokerFaceHandler):  # noqa: N801
+    pass
+
+
 def main() -> None:
     port = int(os.environ.get("PORT", "8000"))
     host = os.environ.get("HOST", "0.0.0.0")
