@@ -500,6 +500,7 @@ async function loadConfig() {
 async function watchDevReload() {
   try {
     const response = await fetch("/api/dev-version", { cache: "no-store" });
+    if (!response.ok) return;
     const payload = await response.json();
     if (!devVersion) {
       devVersion = payload.version;
@@ -511,6 +512,11 @@ async function watchDevReload() {
   } catch {
     // The backend may be restarting. The next poll will reload when it is back.
   }
+}
+
+function isLocalDevHost() {
+  const host = window.location.hostname;
+  return host === "localhost" || host === "127.0.0.1";
 }
 
 function timeoutMessage(label) {
@@ -663,5 +669,7 @@ loadState();
 applyStaticI18n();
 render();
 loadConfig();
-watchDevReload();
-window.setInterval(watchDevReload, DEV_RELOAD_INTERVAL_MS);
+if (isLocalDevHost()) {
+  watchDevReload();
+  window.setInterval(watchDevReload, DEV_RELOAD_INTERVAL_MS);
+}
