@@ -309,7 +309,7 @@ Git 已忽略的运行时文件：
 
 ## 参考资料
 
-- [CODEX FULL COURSE: From Zero to Deployed App (2026)](https://www.youtube.com/watch?v=hoCWD1aI60Y&list=PLdR2DhKMT25UM223D3f0qkGqdnrIzWwV-&index=10)
+- [CODEX FULL COURSE: From Zero to Deployed App (2026)](https://www.youtube.com/watch?v=hoCWD1aI60Y&t=4662s)
 
 ## 安全声明
 
