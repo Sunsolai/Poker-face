@@ -16,6 +16,10 @@ Poker Face is a desktop-first web app for women aged 18–55 who want to upload 
 
 > This is a visualization and education tool — not a medical device, and not a substitute for advice from a licensed professional.
 
+<p align="center">
+  <img src="assets/poker-face-preview-en.png" alt="Poker Face English UI — preview gallery with facial aesthetic effects" width="100%"/>
+</p>
+
 ## Space Configuration
 
 | Field | Value |

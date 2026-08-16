@@ -16,6 +16,10 @@ Poker Face 是一款桌面优先的网页应用，面向 18–55 岁女性用户
 
 > 本产品仅为可视化与教育工具，不是医疗器械，也不能替代持证专业人士的建议。
 
+<p align="center">
+  <img src="assets/poker-face-preview-zh.png" alt="Poker Face 中文界面 — 预览图库与面部美学效果" width="100%"/>
+</p>
+
 ## Space 配置
 
 | 字段 | 值 |
