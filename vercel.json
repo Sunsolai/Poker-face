@@ -2,10 +2,11 @@
   "functions": {
     "api/index.py": {
       "maxDuration": 60,
-      "includeFiles": "static/**"
+      "includeFiles": "{app.py,static/**}"
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index" }
+    { "source": "/", "destination": "/api?__route=/" },
+    { "source": "/(.*)", "destination": "/api?__route=/$1" }
   ]
 }

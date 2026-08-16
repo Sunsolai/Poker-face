@@ -17,7 +17,18 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parent
-STATIC_DIR = ROOT / "static"
+
+
+def resolve_static_dir() -> Path:
+    """Prefer the package-local static dir; fall back to cwd for Vercel bundles."""
+    candidates = [ROOT / "static", Path.cwd() / "static"]
+    for candidate in candidates:
+        if (candidate / "index.html").is_file():
+            return candidate
+    return candidates[0]
+
+
+STATIC_DIR = resolve_static_dir()
 
 
 def load_env_file() -> None:
@@ -310,12 +321,27 @@ class PokerFaceHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def request_route(self) -> str:
+        """Return the app route.
+
+        Locally this is ``self.path``. On Vercel, catch-all rewrites can replace
+        the path with ``/api``, so we also accept ``?__route=/original/path``.
+        """
+        parsed = urllib.parse.urlparse(self.path)
+        params = urllib.parse.parse_qs(parsed.query)
+        route_values = params.get("__route")
+        if route_values:
+            route = route_values[0] or "/"
+            return route if route.startswith("/") else f"/{route}"
+        return parsed.path or "/"
+
     def do_GET(self) -> None:
-        if self.path == "/api/dev-version":
+        route = self.request_route()
+        if route == "/api/dev-version":
             self.send_json(200, {"version": DEV_RELOAD_TOKEN})
             return
 
-        if self.path == "/api/config":
+        if route == "/api/config":
             image_model_configured = any(hint in MODEL.lower() for hint in IMAGE_MODEL_HINTS)
             self.send_json(
                 200,
@@ -330,9 +356,10 @@ class PokerFaceHandler(BaseHTTPRequestHandler):
             )
             return
 
-        route = "/" if self.path == "/" else urllib.parse.urlparse(self.path).path
-        file_path = STATIC_DIR / ("index.html" if route == "/" else route.lstrip("/"))
-        if not file_path.resolve().is_relative_to(STATIC_DIR.resolve()) or not file_path.exists():
+        static_root = resolve_static_dir()
+        relative = "index.html" if route in {"/", ""} else route.lstrip("/")
+        file_path = static_root / relative
+        if not file_path.resolve().is_relative_to(static_root.resolve()) or not file_path.exists():
             self.send_error(404)
             return
 
@@ -345,7 +372,7 @@ class PokerFaceHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_POST(self) -> None:
-        if self.path != "/api/generate":
+        if self.request_route() != "/api/generate":
             self.send_error(404)
             return
 
