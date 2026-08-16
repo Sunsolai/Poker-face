@@ -9,4 +9,4 @@ ENV HOST=0.0.0.0
 
 EXPOSE 7860
 
-CMD ["python", "app.py"]
+CMD ["python", "server.py"]

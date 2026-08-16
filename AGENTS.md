@@ -5,11 +5,11 @@
 - **Project:** Poker Face — a desktop-first web MVP that lets users upload a portrait photo and generate realistic facial aesthetic preview images.
 - **Target user:** women aged 18-55 who want to explore appearance changes safely and privately.
 - **Primary language:** Python, with a standard-library backend and static frontend.
-- **Current files:** `app.py`, `static/index.html`, `static/app.js`, `static/styles.css`, `.env.example`, `README.md`, `AGENTS.md`.
+- **Current files:** `server.py`, `static/index.html`, `static/app.js`, `static/styles.css`, `.env.example`, `README.md`, `AGENTS.md`.
 
 ## Current Implementation
 
-- `app.py` serves static files, exposes JSON APIs, calls the image relay, and runs the dev watcher.
+- `server.py` serves static files, exposes JSON APIs, calls the image relay, and runs the dev watcher.
 - `static/app.js` handles upload, filter selection, generation flow, lightweight state persistence, and frontend reload polling.
 - `static/styles.css` implements the desktop-first sidebar, filter chips, status panel, and masonry gallery.
 - `static/index.html` contains the app shell, upload controls, preview filters, status rows, compare panel, and gallery template.
@@ -20,7 +20,7 @@
 - **Generation:** MVP must use real AI image generation, not static mock results.
 - **Active model:** use `gpt-image-2` through an OpenAI-compatible relay API.
 - **Relay format:** active path is `POKER_FACE_RELAY_FORMAT=openai`.
-- **Gemini:** keep Gemini image generation logic only as commented reference code in `app.py`.
+- **Gemini:** keep Gemini image generation logic only as commented reference code in `server.py`.
 - **Platform:** desktop-first web app.
 - **Gallery:** Pinterest-style masonry gallery.
 - **Mobile:** defer mobile migration unless explicitly requested.
@@ -32,14 +32,14 @@
 ## Commands
 
 - **Install:** no package install required.
-- **Dev:** `python app.py`
+- **Dev:** `python server.py`
 - **Open:** `http://127.0.0.1:8000`
-- **Test:** `python -m py_compile app.py`
+- **Test:** `python -m py_compile server.py`
 - **JS syntax check:** `node --check static\app.js`
 - **Build:** not required.
 - **Lint:** no linter configured.
 
-`python app.py` starts a no-dependency dev watcher. It restarts the child app process when `app.py`, `.env`, `.env.example`, `README.md`, `AGENTS.md`, or files under `static/` change. The frontend polls `/api/dev-version` and reloads after backend restarts.
+`python server.py` starts a no-dependency dev watcher. It restarts the child app process when `server.py`, `.env`, `.env.example`, `README.md`, `AGENTS.md`, or files under `static/` change. The frontend polls `/api/dev-version` and reloads after backend restarts.
 
 ## Environment
 
@@ -70,7 +70,7 @@ Never hardcode or commit real API keys. `.env` is ignored by Git.
 - Treat user photos as sensitive personal data.
 - Present previews as simulations, not medical advice.
 - Keep prompts realistic, conservative, and identity-preserving.
-- Run `python -m py_compile app.py` after backend changes.
+- Run `python -m py_compile server.py` after backend changes.
 - Run `node --check static\app.js` after frontend JS changes.
 
 ## Don't

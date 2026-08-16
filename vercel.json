@@ -2,12 +2,12 @@
   "functions": {
     "api/config.py": {
       "maxDuration": 10,
-      "includeFiles": "app.py",
+      "includeFiles": "server.py",
       "excludeFiles": "{public/**,static/**}"
     },
     "api/generate.py": {
       "maxDuration": 60,
-      "includeFiles": "app.py",
+      "includeFiles": "server.py",
       "excludeFiles": "{public/**,static/**}"
     }
   }

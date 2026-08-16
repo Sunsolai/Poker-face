@@ -34,34 +34,34 @@ The app should help users explore how different facial changes might look on the
 
 ## Current Implementation
 
-- Python standard-library web server in `app.py`
+- Python standard-library web server in `server.py`
 - Static frontend in `static/`
 - No required Python package installation for the current MVP
 - Browser Local Storage for lightweight V1 persistence only
 - Generated image data is kept in browser memory for the active page session
 - Relay API request handled by the Python backend
 - OpenAI-compatible GPT image edit relay using `gpt-image-2`
-- Gemini relay logic retained only as commented reference code in `app.py`
+- Gemini relay logic retained only as commented reference code in `server.py`
 - Desktop-first Pinterest-style masonry gallery
 - Left-side filter panel for choosing which preview effects to generate
 - Per-effect generation status and recoverable error cards
 - Frontend timeout of 150 seconds per generated image
-- Dev watcher in `app.py` for automatic backend restart
+- Dev watcher in `server.py` for automatic backend restart
 - Frontend reload polling through `/api/dev-version`
 
 ## Commands
 
 - **Install:** no package install required for the current MVP
-- **Dev:** `python app.py`
+- **Dev:** `python server.py`
 - **Open:** `http://127.0.0.1:8000`
-- **Syntax check:** `python -m py_compile app.py`
+- **Syntax check:** `python -m py_compile server.py`
 - **JS syntax check:** `node --check static\app.js`
 - **Build:** not required for the current standard-library MVP
 - **Lint:** no linter configured yet
 
-`python app.py` starts a no-dependency development watcher. It starts the actual app as a child process and restarts it when these files change:
+`python server.py` starts a no-dependency development watcher. It starts the actual app as a child process and restarts it when these files change:
 
-- `app.py`
+- `server.py`
 - `.env`
 - `.env.example`
 - `README.md`
@@ -113,7 +113,7 @@ For OpenAI-compatible relays, `POKER_FACE_RELAY_URL` may be either:
 
 The backend accepts GPT image responses from common formats, including OpenAI `b64_json`, direct `url`, or generic base64 fields. Gemini `inlineData` parsing remains present for compatibility, but Gemini generation is not active.
 
-Commented Gemini reference code remains in `app.py` for a possible future switch back to Gemini-style `generateContent` payloads.
+Commented Gemini reference code remains in `server.py` for a possible future switch back to Gemini-style `generateContent` payloads.
 
 ## Backend API
 
