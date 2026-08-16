@@ -307,6 +307,10 @@ Git 已忽略的运行时文件：
 - `server.out.log`
 - `server.err.log`
 
+## 参考资料
+
+- [CODEX FULL COURSE: From Zero to Deployed App (2026)](https://www.youtube.com/watch?v=hoCWD1aI60Y&list=PLdR2DhKMT25UM223D3f0qkGqdnrIzWwV-&index=10)
+
 ## 安全声明
 
 Poker Face 仅提供视觉模拟效果。结果可能与真实医美手术、护肤、化妆或医疗结果不一致。用户在做出医疗、美容或财务决策前，应咨询合格专业人士。

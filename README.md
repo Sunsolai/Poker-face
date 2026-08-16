@@ -307,6 +307,10 @@ Runtime files ignored by Git:
 - `server.out.log`
 - `server.err.log`
 
+## References
+
+- [CODEX FULL COURSE: From Zero to Deployed App (2026)](https://www.youtube.com/watch?v=hoCWD1aI60Y&list=PLdR2DhKMT25UM223D3f0qkGqdnrIzWwV-&index=10)
+
 ## Safety Disclaimer
 
 Poker Face provides visual simulations only. Results may not match real cosmetic procedures, skincare outcomes, makeup results, or medical treatments. Users should consult qualified professionals before making medical, cosmetic, or financial decisions.
