@@ -322,17 +322,7 @@ class PokerFaceHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def request_route(self) -> str:
-        """Return the app route.
-
-        Locally this is ``self.path``. On Vercel, catch-all rewrites can replace
-        the path with ``/api``, so we also accept ``?__route=/original/path``.
-        """
         parsed = urllib.parse.urlparse(self.path)
-        params = urllib.parse.parse_qs(parsed.query)
-        route_values = params.get("__route")
-        if route_values:
-            route = route_values[0] or "/"
-            return route if route.startswith("/") else f"/{route}"
         return parsed.path or "/"
 
     def handle_config(self) -> None:
