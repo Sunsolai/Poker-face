@@ -1,13 +1,14 @@
 {
-  "buildCommand": "mkdir -p public && cp -r static/. public/",
   "functions": {
     "api/config.py": {
       "maxDuration": 10,
-      "includeFiles": "app.py"
+      "includeFiles": "app.py",
+      "excludeFiles": "{public/**,static/**}"
     },
     "api/generate.py": {
       "maxDuration": 60,
-      "includeFiles": "app.py"
+      "includeFiles": "app.py",
+      "excludeFiles": "{public/**,static/**}"
     }
   }
 }
