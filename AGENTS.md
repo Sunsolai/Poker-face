@@ -151,3 +151,10 @@ Never hardcode or commit real API keys. `.env` is ignored by Git.
 - Use plain English when explaining to the user.
 - Avoid long paragraphs and unnecessary detail.
 
+## Cursor Cloud specific instructions
+
+- The default image provides `python3` and `node`, but not a `python` executable. Environment install links `/usr/local/bin/python` to `python3`. There are no third-party packages to install.
+- Run the app with `python pokerface.py`. It listens on `0.0.0.0:8000` (`HOST` / `PORT`). The auto-restart watcher runs only when `POKER_FACE_DEV=1`; otherwise the process is the HTTP server itself.
+- Checks: `python -m py_compile pokerface.py` and `node --check static/app.js` (also `public/app.js`, which mirrors the Vercel static bundle).
+- Image generation needs `POKER_FACE_RELAY_URL` and `POKER_FACE_RELAY_API_KEY` injected as environment variables. Do not commit `.env`. Without them, the UI and `/api/config` still work; `POST /api/generate` returns `POKER_FACE_RELAY_URL is not configured.`
+
